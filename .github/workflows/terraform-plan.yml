@@ -49,10 +49,7 @@ jobs:
         working-directory: ./terraform
 
       - name: Post Plan Result to Pull Request
-        uses: marocchino/sticky-pull-request-comment@v3
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: Terraform Plan Result
-          message: |
-            ```hcl
-            $(cat ./terraform/plan_output.txt)
-            ```
+          path: ./terraform/plan_output.txt
