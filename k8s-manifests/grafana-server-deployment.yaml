@@ -13,6 +13,8 @@ spec:
     metadata:
       labels:
         app: grafana-server
+      annotations:
+        linkerd.io/inject: enabled  # Anotación para la inyección de Linkerd
     spec:
       containers:
         - name: grafana-server

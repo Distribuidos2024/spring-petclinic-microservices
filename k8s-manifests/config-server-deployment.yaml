@@ -13,6 +13,8 @@ spec:
     metadata:
       labels:
         app: config-server
+      annotations:
+        linkerd.io/inject: enabled  # Anotación para la inyección de Linkerd
     spec:
       containers:
         - name: config-server
