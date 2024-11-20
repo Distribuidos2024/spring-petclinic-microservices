@@ -40,4 +40,5 @@ jobs:
           echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
 
       - name: Post Build Output
-        run: echo "Docker image built successfully: ${{ env.IMAGE_NAME }}"
+        run: |
+          echo "Docker image built successfully: ${{ env.IMAGE_NAME }}"
