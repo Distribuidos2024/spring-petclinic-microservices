@@ -22,17 +22,20 @@ jobs:
         run: |
           az acr login --name petdistriACR
 
+      - name: Download Image Name Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: image-name
+
       - name: Deploy Docker Image
         run: |
-          ORIGINAL_IMAGE_NAME="petdistriacr.azurecr.io/spring-petclinic-vets-service:pr-${{ github.event.pull_request.number }}"
+          ORIGINAL_IMAGE_NAME=$(cat image_name.txt)
           NEW_IMAGE_NAME="petdistriacr.azurecr.io/spring-petclinic-vets-service:deploy-${{ github.run_number }}"
 
           echo "Original image: $ORIGINAL_IMAGE_NAME"
           echo "New image: $NEW_IMAGE_NAME"
 
-          # Renombrar la imagen
+          # Pull, retag, and push the image
           docker pull $ORIGINAL_IMAGE_NAME
           docker tag $ORIGINAL_IMAGE_NAME $NEW_IMAGE_NAME
-
-          # Subir la nueva imagen al ACR
           docker push $NEW_IMAGE_NAME
