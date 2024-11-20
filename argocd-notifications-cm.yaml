@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/component: notifications-controller
+    app.kubernetes.io/name: argocd-notifications-controller
+    app.kubernetes.io/part-of: argocd
+data:
+  service.email: |
+    host: smtp.sendgrid.net
+    port: 587
+    from: dmh1802@gmail.com
+    username: apikey
+    password: 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
+  triggers.sync-succeeded: |
+    - send:
+        - email:
+            to:
+              - dmh1802@gmail.com
+  triggers.sync-failed: |
+    - send:
+        - email:
+            to:
+              - dmh1802@gmail.com
