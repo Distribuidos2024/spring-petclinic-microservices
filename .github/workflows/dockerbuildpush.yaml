@@ -1,0 +1,57 @@
+name: Build and Push Docker Images to ACR
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout el código
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. Detectar qué servicios tienen cambios en sus Dockerfiles
+      - name: Detect Modified Dockerfiles
+        id: detect-changes
+        run: |
+          # Detectar solo servicios que tienen cambios en sus Dockerfiles
+          MODIFIED_SERVICES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -oE '^[^/]+/Dockerfile' | awk -F/ '{print $1}' | sort -u)
+          if [ -z "$MODIFIED_SERVICES" ]; then
+            echo "No modified Dockerfiles detected. Skipping build and push."
+            exit 0
+          fi
+          echo "MODIFIED_SERVICES=$MODIFIED_SERVICES" >> $GITHUB_ENV
+        shell: bash
+
+      # 3. Iterar sobre los servicios modificados y construir/subir imágenes
+      - name: Build and Push Docker Images
+        if: env.MODIFIED_SERVICES
+        run: |
+          for SERVICE in $MODIFIED_SERVICES; do
+            echo "Detected changes in Dockerfile for service: $SERVICE"
+
+            # Crear etiquetas únicas para la imagen
+            IMAGE_TAG="pr-${{ github.event.pull_request.number }}"
+            IMAGE_NAME="petdistriacr.azurecr.io/$SERVICE:$IMAGE_TAG"
+
+            # Construir la imagen Docker
+            echo "Building Docker image for $SERVICE"
+            docker build -t $IMAGE_NAME ./$SERVICE
+
+            # Subir la imagen al ACR
+            echo "Pushing Docker image for $SERVICE to ACR"
+            docker push $IMAGE_NAME
+
+            # Guardar la información de la imagen
+            echo "Successfully processed $SERVICE with image: $IMAGE_NAME"
+          done
+        shell: bash
+
+      # 4. Publicar un resumen al final
+      - name: Publish Summary
+        run: |
+          echo "Docker images built and pushed successfully for services: $MODIFIED_SERVICES"
