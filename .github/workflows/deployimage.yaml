@@ -1,4 +1,4 @@
-name: Deploy Docker Image to ACR
+name: Deploy Docker Image
 
 on:
   push:
@@ -10,37 +10,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout el código
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # 2. Loguearse en Azure (asegúrate de tener las credenciales configuradas en los secretos)
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 3. Autenticarse en el ACR
-      - name: Docker Login to ACR
+      - name: Log in to Azure Container Registry
         run: |
           az acr login --name petdistriACR
 
-      # 4. Renombrar la imagen y subirla al ACR
-      - name: Tag and Push Docker Image
+      - name: Deploy Docker Image
         run: |
-          ORIGINAL_IMAGE_NAME="petdistriacr.azurecr.io/spring-petclinic-vets-service:pr-${{ github.run_id }}"
+          ORIGINAL_IMAGE_NAME="petdistriacr.azurecr.io/spring-petclinic-vets-service:pr-${{ github.event.pull_request.number }}"
           NEW_IMAGE_NAME="petdistriacr.azurecr.io/spring-petclinic-vets-service:deploy-${{ github.run_number }}"
-          
+
           echo "Original image: $ORIGINAL_IMAGE_NAME"
           echo "New image: $NEW_IMAGE_NAME"
-          
+
           # Renombrar la imagen
+          docker pull $ORIGINAL_IMAGE_NAME
           docker tag $ORIGINAL_IMAGE_NAME $NEW_IMAGE_NAME
-          
+
           # Subir la nueva imagen al ACR
           docker push $NEW_IMAGE_NAME
-
-      # 5. Post Deploy Output
-      - name: Post Deploy Output
-        run: |
-          echo "Docker image successfully pushed to ACR with tag: deploy-${{ github.run_number }}"
