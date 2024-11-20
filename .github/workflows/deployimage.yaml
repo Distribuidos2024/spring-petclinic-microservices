@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - main
-      
-permissions:
-  contents: write
-
 
 jobs:
   deploy:
@@ -17,38 +13,36 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Fetch Image Name from Temp Branch
-        run: |
-          BRANCH_NAME="temp/image-info-${{ github.event.before }}"
-          git fetch origin $BRANCH_NAME:$BRANCH_NAME || exit 0
-          git checkout $BRANCH_NAME || exit 0
-          IMAGE_NAME=$(cat spring-petclinic-vets-service/image_name.txt)
-          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
-
-      - name: Azure Login
+      - name: Login to Azure
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Log in to Azure Container Registry
+      - name: Login to Azure Container Registry
+        run: az acr login --name petdistriACR
+
+      - name: Read Image Name
         run: |
-          az acr login --name petdistriACR
+          export ORIGINAL_IMAGE_NAME=$(cat spring-petclinic-vets-service/image_name.txt)
+          echo "ORIGINAL_IMAGE_NAME=$ORIGINAL_IMAGE_NAME" >> $GITHUB_ENV
+        continue-on-error: false
 
-      - name: Deploy Docker Image
+      - name: Debug Image Name
+        run: cat spring-petclinic-vets-service/image_name.txt
+
+      - name: Pull Docker Image
+        run: docker pull ${{ env.ORIGINAL_IMAGE_NAME }}
+
+      - name: Tag Docker Image
         run: |
-          ORIGINAL_IMAGE_NAME=$IMAGE_NAME
-          NEW_IMAGE_NAME="petdistriacr.azurecr.io/spring-petclinic-vets-service:deploy-${{ github.run_number }}"
+          NEW_IMAGE_NAME="petdistriacr.azurecr.io/spring-petclinic-vets-service:deploy-${{ github.run_id }}"
+          docker tag ${{ env.ORIGINAL_IMAGE_NAME }} $NEW_IMAGE_NAME
+          echo "NEW_IMAGE_NAME=$NEW_IMAGE_NAME" >> $GITHUB_ENV
 
-          echo "Original image: $ORIGINAL_IMAGE_NAME"
-          echo "New image: $NEW_IMAGE_NAME"
-
-          # Pull, retag, and push the image
-          docker pull $ORIGINAL_IMAGE_NAME
-          docker tag $ORIGINAL_IMAGE_NAME $NEW_IMAGE_NAME
-          docker push $NEW_IMAGE_NAME
+      - name: Push Docker Image
+        run: docker push ${{ env.NEW_IMAGE_NAME }}
 
       - name: Delete Temporary Branch
         if: always()
         run: |
-          BRANCH_NAME="temp/image-info-${{ github.event.before }}"
-          git push origin --delete $BRANCH_NAME || echo "Branch already deleted"
+          git push origin --delete temp/image-info-${{ github.sha }} || echo "Branch already deleted."
