@@ -133,7 +133,7 @@ resource "azurerm_key_vault_secret" "db_connection_string" {
   key_vault_id = azurerm_key_vault.key_vault.id
 }
 
-# Secretos adicionales para usuario y contraseña de MySQL en Key Vault
+# Secretos adicionales para usuario y contraseña de MySQL en Key Vault, probando a ver
 resource "azurerm_key_vault_secret" "db_username" {
   name         = "DB-Username"
   value        = var.mysql_admin_username
