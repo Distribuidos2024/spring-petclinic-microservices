@@ -13,6 +13,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Fetch Image Name from Temp Branch
+        run: |
+          BRANCH_NAME="temp/image-info-${{ github.event.before }}"
+          git fetch origin $BRANCH_NAME:$BRANCH_NAME || exit 0
+          git checkout $BRANCH_NAME || exit 0
+          IMAGE_NAME=$(cat spring-petclinic-vets-service/image_name.txt)
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+
       - name: Azure Login
         uses: azure/login@v1
         with:
@@ -22,14 +30,9 @@ jobs:
         run: |
           az acr login --name petdistriACR
 
-      - name: Download Image Name Artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: image-name
-
       - name: Deploy Docker Image
         run: |
-          ORIGINAL_IMAGE_NAME=$(cat image_name.txt)
+          ORIGINAL_IMAGE_NAME=$IMAGE_NAME
           NEW_IMAGE_NAME="petdistriacr.azurecr.io/spring-petclinic-vets-service:deploy-${{ github.run_number }}"
 
           echo "Original image: $ORIGINAL_IMAGE_NAME"
@@ -39,3 +42,9 @@ jobs:
           docker pull $ORIGINAL_IMAGE_NAME
           docker tag $ORIGINAL_IMAGE_NAME $NEW_IMAGE_NAME
           docker push $NEW_IMAGE_NAME
+
+      - name: Delete Temporary Branch
+        if: always()
+        run: |
+          BRANCH_NAME="temp/image-info-${{ github.event.before }}"
+          git push origin --delete $BRANCH_NAME || echo "Branch already deleted"
