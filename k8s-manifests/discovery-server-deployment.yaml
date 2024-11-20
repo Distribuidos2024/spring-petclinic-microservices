@@ -5,7 +5,7 @@ metadata:
   labels:
     app: discovery-server
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: discovery-server
