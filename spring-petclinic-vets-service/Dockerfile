@@ -1,6 +1,6 @@
 
-# Usar la imagen base de OpenJDK para ejecutar aplicaciones Java, esto es una prueba
-FROM openjdk:17-jdk-slim
+# Usar la imagen base de OpenJDK para ejecutar aplicaciones Java, esto es una prueba mamamam
+FROM openjdk:17-jdk-slim 
 
 # Mantenedor
 LABEL maintainer="tu_email@example.com"
