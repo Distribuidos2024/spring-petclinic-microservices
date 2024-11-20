@@ -1,0 +1,17 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: admin-server-scaledobject
+  namespace: default
+spec:
+  scaleTargetRef:
+    name: admin-server  # Nombre del deployment a escalar
+  pollingInterval: 30
+  cooldownPeriod: 60
+  minReplicaCount: 1
+  maxReplicaCount: 5
+  triggers:
+    - type: cpu
+      metadata:
+        type: Utilization
+        value: "20"  # Escalar si la CPU supera el 70%

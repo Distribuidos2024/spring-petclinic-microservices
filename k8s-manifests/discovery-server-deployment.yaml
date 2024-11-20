@@ -15,6 +15,10 @@ spec:
         app: discovery-server
       annotations:
         linkerd.io/inject: enabled  # Anotación para la inyección de Linkerd
+        config.linkerd.io/proxy-cpu-request: "50m"    # Solicitud mínima de CPU para linkerd-proxy
+        config.linkerd.io/proxy-cpu-limit: "100m"     # Límite de CPU para linkerd-proxy
+        config.linkerd.io/proxy-memory-request: "32Mi" # Solicitud mínima de memoria para linkerd-proxy
+        config.linkerd.io/proxy-memory-limit: "64Mi"   # Límite de memoria para linkerd-proxy
     spec:
       containers:
         - name: discovery-server
@@ -26,8 +30,8 @@ spec:
               memory: "512Mi"
               cpu: "500m"
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "128Mi"
+              cpu: "100m"
           livenessProbe:
             httpGet:
               path: /actuator/health

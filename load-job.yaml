@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: high-load-job
+spec:
+  parallelism: 10  # Ejecuta 10 instancias en paralelo
+  completions: 10  # Número total de ejecuciones para cada instancia
+  template:
+    spec:
+      containers:
+      - name: load-generator
+        image: curlimages/curl:7.73.0
+        command: ["sh", "-c"]
+        args:
+        - "while true; do curl -s http://<visits-service-url>/actuator/health; done"
+      restartPolicy: Never

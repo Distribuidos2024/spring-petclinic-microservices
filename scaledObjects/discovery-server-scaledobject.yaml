@@ -1,0 +1,17 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: discovery-server-scaledobject
+  namespace: default
+spec:
+  scaleTargetRef:
+    name: discovery-server
+  pollingInterval: 30
+  cooldownPeriod: 60
+  minReplicaCount: 1
+  maxReplicaCount: 3  # Limita a 3 réplicas para ahorrar recursos
+  triggers:
+    - type: cpu
+      metadata:
+        type: Utilization
+        value: "20"

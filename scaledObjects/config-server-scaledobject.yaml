@@ -1,0 +1,17 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: config-server-scaledobject
+  namespace: default
+spec:
+  scaleTargetRef:
+    name: config-server
+  pollingInterval: 30
+  cooldownPeriod: 60
+  minReplicaCount: 1
+  maxReplicaCount: 3  # Limita el escalado a 3 réplicas para optimizar costos
+  triggers:
+    - type: cpu
+      metadata:
+        type: Utilization
+        value: "20"

@@ -14,7 +14,11 @@ spec:
       labels:
         app: api-gateway
       annotations:
-        linkerd.io/inject: enabled  # Anotación para la inyección de Linkerd
+        linkerd.io/inject: enabled                     # Habilitar la inyección de Linkerd
+        config.linkerd.io/proxy-cpu-request: "50m"    # Solicitud mínima de CPU para linkerd-proxy
+        config.linkerd.io/proxy-cpu-limit: "100m"     # Límite de CPU para linkerd-proxy
+        config.linkerd.io/proxy-memory-request: "32Mi" # Solicitud mínima de memoria para linkerd-proxy
+        config.linkerd.io/proxy-memory-limit: "64Mi"   # Límite de memoria para linkerd-proxy
     spec:
       containers:
         - name: api-gateway
@@ -23,11 +27,11 @@ spec:
             - containerPort: 8080
           resources:
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: "512Mi"    # Límite de memoria para api-gateway
+              cpu: "500m"        # Límite de CPU para api-gateway
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "128Mi"    # Solicitud mínima de memoria para api-gateway
+              cpu: "100m"        # Solicitud mínima de CPU para api-gateway
           livenessProbe:
             httpGet:
               path: /actuator/health
