@@ -1,0 +1,1 @@
+petdistriacr.azurecr.io/spring-petclinic-vets-service:pr-18
