@@ -39,8 +39,12 @@ jobs:
           docker build -t $IMAGE_NAME ./spring-petclinic-vets-service
           echo $IMAGE_NAME > image_name.txt
 
-      - name: Upload Image Name Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: image-name
-          path: image_name.txt
+      - name: Push Image Name to Temp Branch
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git checkout -b temp/image-info-${{ github.event.pull_request.number }}
+          mv image_name.txt spring-petclinic-vets-service/
+          git add spring-petclinic-vets-service/image_name.txt
+          git commit -m "Save image name for PR #${{ github.event.pull_request.number }}"
+          git push origin temp/image-info-${{ github.event.pull_request.number }} --force
