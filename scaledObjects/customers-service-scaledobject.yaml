@@ -1,0 +1,17 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: customers-service-scaledobject
+  namespace: default
+spec:
+  scaleTargetRef:
+    name: customers-service
+  pollingInterval: 30
+  cooldownPeriod: 60
+  minReplicaCount: 1
+  maxReplicaCount: 5
+  triggers:
+    - type: cpu
+      metadata:
+        type: Utilization
+        value: "20"

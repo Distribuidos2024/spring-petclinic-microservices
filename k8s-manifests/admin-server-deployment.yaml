@@ -1,45 +1,49 @@
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: admin-server
-    labels:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-server
+  labels:
+    app: admin-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
       app: admin-server
-  spec:
-    replicas: 1
-    selector:
-      matchLabels:
+  template:
+    metadata:
+      labels:
         app: admin-server
-    template:
-      metadata:
-        labels:
-          app: admin-server
-        annotations:
-          linkerd.io/inject: enabled  # Anotación para la inyección de Linkerd
-      spec:
-        containers:
-          - name: admin-server
-            image: petdistriacr.azurecr.io/spring-petclinic-admin-server:latest
-            ports:
-              - containerPort: 9090
-            resources:
-              limits:
-                memory: "512Mi"
-                cpu: "500m"
-              requests:
-                memory: "256Mi"
-                cpu: "250m"
-            livenessProbe:
-              httpGet:
-                path: /actuator/health
-                port: 9090
-              initialDelaySeconds: 30
-              periodSeconds: 10
-            readinessProbe:
-              httpGet:
-                path: /actuator/health
-                port: 9090
-              initialDelaySeconds: 15
-              periodSeconds: 5
-        imagePullSecrets:
-          - name: acr-auth
-        restartPolicy: Always
+      annotations:
+        linkerd.io/inject: enabled                     # Habilitar la inyección de Linkerd
+        config.linkerd.io/proxy-cpu-request: "50m"    # Solicitud mínima de CPU para linkerd-proxy
+        config.linkerd.io/proxy-cpu-limit: "100m"     # Límite de CPU para linkerd-proxy
+        config.linkerd.io/proxy-memory-request: "32Mi" # Solicitud mínima de memoria para linkerd-proxy
+        config.linkerd.io/proxy-memory-limit: "64Mi"   # Límite de memoria para linkerd-proxy
+    spec:
+      containers:
+        - name: admin-server
+          image: petdistriacr.azurecr.io/spring-petclinic-admin-server:latest
+          ports:
+            - containerPort: 9090
+          resources:
+            limits:
+              memory: "512Mi"    # Límite de memoria para admin-server
+              cpu: "500m"        # Límite de CPU para admin-server
+            requests:
+              memory: "128Mi"    # Solicitud mínima de memoria para admin-server
+              cpu: "100m"        # Solicitud mínima de CPU para admin-server
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9090
+            initialDelaySeconds: 15
+            periodSeconds: 5
+      imagePullSecrets:
+        - name: acr-auth
+      restartPolicy: Always
