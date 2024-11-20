@@ -13,6 +13,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Build Application with Maven
+        run: |
+          cd spring-petclinic-vets-service
+          mvn clean package -DskipTests
+
       - name: Check for Dockerfile
         id: check-dockerfile
         run: |
@@ -29,7 +40,4 @@ jobs:
           echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
 
       - name: Post Build Output
-        run: |
-          echo "Docker image built successfully: ${{ env.IMAGE_NAME }}"
-        env:
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+        run: echo "Docker image built successfully: ${{ env.IMAGE_NAME }}"
