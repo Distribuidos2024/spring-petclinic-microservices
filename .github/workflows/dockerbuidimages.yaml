@@ -1,53 +1,63 @@
-name: Build Docker Images
+name: Build and Push Docker Image to ACR
 
 on:
   pull_request:
     branches:
       - main
-permissions:
-  contents: write
-
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout el código
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      # 2. Configuración de Java
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           java-version: 17
           distribution: 'temurin'
 
+      # 3. Construir la aplicación con Maven
       - name: Build Application with Maven
         run: |
           cd spring-petclinic-vets-service
           mvn clean package -DskipTests
 
-      - name: Check for Dockerfile
-        id: check-dockerfile
+      # 4. Login al Azure Container Registry
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to Azure Container Registry
+        run: az acr login --name petdistriACR
+
+      # 5. Construir y etiquetar la imagen Docker
+      - name: Build Docker Image
         run: |
-          if [ ! -f ./spring-petclinic-vets-service/Dockerfile ]; then
-            echo "No Dockerfile found in the service directory."
+          IMAGE_TAG="pr-${{ github.event.pull_request.number }}"
+          IMAGE_NAME="petdistriacr.azurecr.io/spring-petclinic-vets-service:$IMAGE_TAG"
+          docker build -t $IMAGE_NAME ./spring-petclinic-vets-service
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+
+      # 6. Subir la imagen al ACR
+      - name: Push Docker Image to ACR
+        run: |
+          if [ -z "${{ env.IMAGE_NAME }}" ]; then
+            echo "ERROR: IMAGE_NAME is not set."
             exit 1
           fi
+          docker push ${{ env.IMAGE_NAME }}
 
-      - name: Build Docker Image
-        id: docker-build
+      # 7. Publicar el resultado
+      - name: Output Image Info
         run: |
-          IMAGE_NAME="petdistriacr.azurecr.io/spring-petclinic-vets-service:pr-${{ github.event.pull_request.number }}"
-          docker build -t $IMAGE_NAME ./spring-petclinic-vets-service
-          echo $IMAGE_NAME > image_name.txt
-
-      - name: Push Image Name to Temp Branch
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git checkout -b temp/image-info-${{ github.event.pull_request.number }}
-          mv image_name.txt spring-petclinic-vets-service/
-          git add spring-petclinic-vets-service/image_name.txt
-          git commit -m "Save image name for PR #${{ github.event.pull_request.number }}"
-          git push origin temp/image-info-${{ github.event.pull_request.number }} --force
+          if [ -z "${{ env.IMAGE_NAME }}" ]; then
+            echo "ERROR: IMAGE_NAME is not set."
+            exit 1
+          fi
+          echo "Docker image built and pushed successfully: ${{ env.IMAGE_NAME }}"
