@@ -1,0 +1,35 @@
+name: Build Docker Images
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Check for Dockerfile
+        id: check-dockerfile
+        run: |
+          if [ ! -f ./spring-petclinic-vets-service/Dockerfile ]; then
+            echo "No Dockerfile found in the service directory."
+            exit 1
+          fi
+
+      - name: Build Docker Image
+        id: docker-build
+        run: |
+          IMAGE_NAME="petdistriacr.azurecr.io/spring-petclinic-vets-service:pr-${{ github.event.pull_request.number }}"
+          docker build -t $IMAGE_NAME ./spring-petclinic-vets-service
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+
+      - name: Post Build Output
+        run: |
+          echo "Docker image built successfully: ${{ env.IMAGE_NAME }}"
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
