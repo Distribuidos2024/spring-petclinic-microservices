@@ -43,7 +43,7 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
   }
 
   tags = {
-    environment = "Dev"
+    environment = "Prod"
   }
 }
 
@@ -66,7 +66,7 @@ resource "azurerm_role_assignment" "aks_acr_role_assignment" {
 # Servidor MySQL Flexible
 resource "azurerm_mysql_flexible_server" "mysql_server" {
   name                = var.mysql_server_name
-  location            = "westus"
+  location            = "eastus"
   resource_group_name = azurerm_resource_group.example_rg.name
 
   # Configuración de la SKU
@@ -78,7 +78,7 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
 
   # Configuración de almacenamiento
   storage {
-    size_gb = 20  # Tamaño mínimo en GB
+    size_gb = 25  # Tamaño mínimo en GB
   }
 
   version = "5.7"
