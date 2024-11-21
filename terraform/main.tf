@@ -43,7 +43,7 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
   }
 
   tags = {
-    environment = "Pruebas"
+    environment = "Prod"
   }
 }
 
@@ -78,7 +78,7 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
 
   # Configuración de almacenamiento
   storage {
-    size_gb = 10  # Tamaño mínimo en GB
+    size_gb = 25  # Tamaño mínimo en GB
   }
 
   version = "5.7"
